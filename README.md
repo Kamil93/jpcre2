@@ -671,6 +671,3 @@ Option | Details
 `--disable-jpcre2-test-compile` | Do not build the test cpp files (enabled by default). This will be disabled automatically if 8 bit library is not selected to be built.
 `--enable-jpcre2-test-compile-cpp11` | Build the test cpp files that require >=C++11 (disabled by default). No effect if 16 bit and 32 bit libraries weren't selected to be built.
 
-
-
-

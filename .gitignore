@@ -3,3 +3,5 @@ autom4te.cache/
 *.scan
 img/
 /doc
+*.png
+*.jpg

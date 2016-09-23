@@ -5,3 +5,8 @@
 aclocal.m4
 /doc
 *.bak
+*.png
+*.jpg
+*.log
+/.settings
+/.project

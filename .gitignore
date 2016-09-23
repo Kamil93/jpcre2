@@ -6,3 +6,6 @@ img/
 *.png
 *.jpg
 aclocal.m4
+/.settings
+/.project
+*.bak

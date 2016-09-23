@@ -6,25 +6,23 @@
  * */
 
 #include <iostream>
-#define PCRE2_CODE_UNIT_WIDTH 8
 #include "jpcre2.hpp"
 
 
 #define getLine(a) std::getline(std::cin,a,'\n')
 
-typedef jpcre2::select<char> jp;
 
 int main(){
 
-    jp::VecNum vec_num0;   //Vector to store numbered substring Map.
-    jp::VecNas vec_nas0;   //Vector to store named substring Map.
-    jp::VecNtN vec_nn0;    //Vector to store Named substring to Number Map.
+    jpcre2::VecNum vec_num0;   //Vector to store numbered substring Map.
+    jpcre2::VecNas vec_nas0;   //Vector to store named substring Map.
+    jpcre2::VecNtN vec_nn0;    //Vector to store Named substring to Number Map.
     
    
     std::string pat, mod, subject, ac_mod;
     
     //create an object
-    jp::Regex re;
+    jpcre2::Regex re;
 
     std::cout<<"Enter pattern: ";
     getLine(pat);
@@ -87,7 +85,7 @@ int main(){
                 //This vector contains maps with number as the key and the corresponding substring as the value
                 std::cout<<"\n-------------------------------------------------------------------------";
                 std::cout<< "\n--- Numbered Substrings (number: substring) for match "<<i+1<<" ---\n";
-                for(jp::MapNum::iterator ent=vec_num0[i].begin();ent!=vec_num0[i].end();++ent){
+                for(jpcre2::MapNum::iterator ent=vec_num0[i].begin();ent!=vec_num0[i].end();++ent){
                     std::cout<<"\n\t"<<ent->first<<": "<<ent->second<<"\n";
                 }
                 
@@ -96,7 +94,7 @@ int main(){
                 //This vector contains maps with name as the key and the corresponding substring as the value
                 std::cout<<"\n-------------------------------------------------------------------------";
                 std::cout<< "\n--- Named Substrings (name: substring) for match "<<i+1<<" ---\n";
-                for(jp::MapNas::iterator ent=vec_nas0[i].begin();ent!=vec_nas0[i].end();++ent){
+                for(jpcre2::MapNas::iterator ent=vec_nas0[i].begin();ent!=vec_nas0[i].end();++ent){
                     std::cout<<"\n\t"<<ent->first<<": "<<ent->second<<"\n";
                 }
                 
@@ -106,7 +104,7 @@ int main(){
                 //i.e the number (of substring) can be accessed with the name for named substring.
                 std::cout<<"\n-------------------------------------------------------------------------";
                 std::cout<< "\n--- Name to number mapping (name: number/position) for match "<<i+1<<" ---\n";
-                for(jp::MapNtN::iterator ent=vec_nn0[i].begin();ent!=vec_nn0[i].end();++ent){
+                for(jpcre2::MapNtN::iterator ent=vec_nn0[i].begin();ent!=vec_nn0[i].end();++ent){
                     std::cout<<"\n\t"<<ent->first<<": "<<ent->second<<"\n";
                 }
             }

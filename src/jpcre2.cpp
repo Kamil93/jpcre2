@@ -41,48 +41,51 @@
 
 #include <cstdio>   // snprintf
 #include <limits>   // std::numeric_limits
-#include <cwchar>   // wcslen, std::mbstate_t
-#include <cstring>  // strlen
-#include <clocale>  // std::setlocale
+#include <cassert>  // assert
 
-#if PCRE2_CODE_UNIT_WIDTH != 8 && PCRE2_CODE_UNIT_WIDTH != 16 && PCRE2_CODE_UNIT_WIDTH !=32
-#error This cpp file needs PCRE2_CODE_UNIT_WIDTH to be defined either 8 or 16 or 32. if you want 0, link with libraries instead.
+#ifndef JPCRE2_GLUE
+#define JPCRE2_GLUE(a,b) a##b
 #endif
 
-#define JPCRE2_JOIN(a,b) a ## b
-#define JPCRE2_GLUE(a,b) JPCRE2_JOIN(a,b)
-#define JPCRE2_SUFFIX(a) JPCRE2_GLUE(a,PCRE2_CODE_UNIT_WIDTH)
-#define select JPCRE2_SUFFIX(select)
+
+#ifdef JPCRE2_USE_WSTRING
+    #include <cwchar>   // wcslen
+    #define Strlen wcslen
+    #define FORMAT_STRING(a) JPCRE2_GLUE(L,a)
+    #define JPCRE2_EMPTY_STRING L""
+#else
+    #include <cstring>  // strlen
+    #define Strlen strlen
+    #define FORMAT_STRING(a) a
+    #define JPCRE2_EMPTY_STRING ""
+#endif
 
 
-const std::string jpcre2::INFO::NAME("JPCRE2");
-const std::string jpcre2::INFO::FULL_VERSION("10.27.01");
-const std::string jpcre2::INFO::VERSION_GENRE("10");
-const std::string jpcre2::INFO::VERSION_MAJOR("27");
-const std::string jpcre2::INFO::VERSION_MINOR("01");
-const std::string jpcre2::INFO::VERSION_PRE_RELEASE("");
 
 
-const std::string jpcre2::LOCALE_NONE = "JPCRE2_NONE";                           ///< Nothing to be done on locale
-const std::string jpcre2::LOCALE_DEFAULT = LOCALE_NONE;                          ///< Default local to be used
-/// Max of int is used as the initial size of replaced string by default
+const jpcre2::String jpcre2::INFO::NAME(FORMAT_STRING("JPCRE2"));
+const jpcre2::String jpcre2::INFO::FULL_VERSION(FORMAT_STRING("10.26.01"));
+const jpcre2::String jpcre2::INFO::VERSION_GENRE(FORMAT_STRING("10"));
+const jpcre2::String jpcre2::INFO::VERSION_MAJOR(FORMAT_STRING("26"));
+const jpcre2::String jpcre2::INFO::VERSION_MINOR(FORMAT_STRING("01"));
+const jpcre2::String jpcre2::INFO::VERSION_PRE_RELEASE(FORMAT_STRING(""));
+
+
+
+
+
+/// Max of `int` is used as the initial size of replaced string by default.
 const jpcre2::SIZE_T jpcre2::SUBSTITUTE_RESULT_INIT_SIZE = std::numeric_limits<int>::max();
-
-
-template<>
-const typename jpcre2::select<char>::String jpcre2::select<char>::JPCRE2_EMPTY_STRING("");
-template<>
-const typename jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::JPCRE2_EMPTY_STRING(L"");
-#if __cplusplus >= 201103L
-template<>
-const typename jpcre2::select<char16_t>::String jpcre2::select<char16_t>::JPCRE2_EMPTY_STRING(u"");
-template<>
-const typename jpcre2::select<char32_t>::String jpcre2::select<char32_t>::JPCRE2_EMPTY_STRING(U"");
-#endif
+const jpcre2::String jpcre2::LOCALE_DEFAULT = LOCALE_NONE;                          ///< Default local to be used
+const jpcre2::String jpcre2::LOCALE_NONE = FORMAT_STRING("JPCRE2_NONE");                           ///< Nothing to be done on locale
+const jpcre2::String jpcre2::JIT_ERROR_MESSAGE_PREFIX = FORMAT_STRING("JIT compilation failed! "); ///< Prefix to be added to JIT error message
+const jpcre2::String jpcre2::ERROR_OFFSET_SUFFIX = FORMAT_STRING(". Error offset: ");
+const jpcre2::String jpcre2::INVALID_MODIFIER_MSG = FORMAT_STRING("Invalid modifier: ");
 
 // Define modifiers for compile
 // Every modifier needs to be unique in this block
-const std::string jpcre2::MOD::C_N("eijmnsuxADJU");
+const jpcre2::String jpcre2::MOD::C_N(FORMAT_STRING("eijmnsuxADJU"));
+
 const jpcre2::Uint jpcre2::MOD::C_V[12] = { PCRE2_MATCH_UNSET_BACKREF,                  // Modifier e
                                             PCRE2_CASELESS,                             // Modifier i
                                             PCRE2_ALT_BSUX | PCRE2_MATCH_UNSET_BACKREF, // Modifier j
@@ -96,181 +99,133 @@ const jpcre2::Uint jpcre2::MOD::C_V[12] = { PCRE2_MATCH_UNSET_BACKREF,          
                                             PCRE2_DUPNAMES,                             // Modifier J
                                             PCRE2_UNGREEDY                              // Modifier U
                                           };
-                                          
 
-const std::string jpcre2::MOD::CJ_N("S");
+const jpcre2::String jpcre2::MOD::CJ_N(FORMAT_STRING("S"));
 const jpcre2::Uint jpcre2::MOD::CJ_V[1] = { JIT_COMPILE,                                // Modifier S
                                           };
 
 
+
 // Define modifiers for replace
 // Every modifier needs to be unique in this block
-const std::string jpcre2::MOD::R_N("eEgx");
+const jpcre2::String jpcre2::MOD::R_N(FORMAT_STRING("eEgx"));
 const jpcre2::Uint jpcre2::MOD::R_V[4] = { PCRE2_SUBSTITUTE_UNSET_EMPTY,                // Modifier  e
                                            PCRE2_SUBSTITUTE_UNKNOWN_UNSET | PCRE2_SUBSTITUTE_UNSET_EMPTY,   // Modifier E (includes e)
                                            PCRE2_SUBSTITUTE_GLOBAL,                     // Modifier g
                                            PCRE2_SUBSTITUTE_EXTENDED                    // Modifier x
                                          };
 
-
-const std::string jpcre2::MOD::RJ_N("");
+const jpcre2::String jpcre2::MOD::RJ_N(FORMAT_STRING(""));
 const jpcre2::Uint jpcre2::MOD::RJ_V[1] = { NONE
                                           };
-//Explicit
+
 
 // Define modifiers for match
 // Every modifier needs to be unique in this block
-
-const std::string jpcre2::MOD::M_N("A");
+const jpcre2::String jpcre2::MOD::M_N(FORMAT_STRING("A"));
 const jpcre2::Uint jpcre2::MOD::M_V[1] = { PCRE2_ANCHORED                               // Modifier  A
                                          };
 
-
-const std::string jpcre2::MOD::MJ_N("g");
+const jpcre2::String jpcre2::MOD::MJ_N(FORMAT_STRING("g"));
 const jpcre2::Uint jpcre2::MOD::MJ_V[1] = { FIND_ALL,                                   // Modifier  g
                                           };
 
+// utils namespace
 
-
-template<class Char_T>
-typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::toString(const Char_T* a) {
+/// @param a const Char* to be converted to jpcre2::String
+/// @return jpcre2::String
+jpcre2::String jpcre2::utils::toString(const Char* a) {
 	if (a)
 		return String(a);
 	else
 		return JPCRE2_EMPTY_STRING;
 }
-//Explicit instantiation
-template jpcre2::select<char>::String jpcre2::select<char>::toString(const char* a);
-template jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::toString(const wchar_t* a);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::String jpcre2::select<char16_t>::toString(const char16_t* a);
-template jpcre2::select<char32_t>::String jpcre2::select<char32_t>::toString(const char32_t* a);
-#endif
 
-
-template<class Char_T>
-typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::toString(Char_T a) {
-	if (a)
+/// @param a Char to be converted to jpcre2::String
+/// @return jpcre2::String
+jpcre2::String jpcre2::utils::toString(Char a) {
+	if (a != '\0')
 		return String(1, a);
 	else
 		return JPCRE2_EMPTY_STRING;
 }
-//Explicit inst...
-template jpcre2::select<char>::String jpcre2::select<char>::toString(char a);
-template jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::toString(wchar_t a);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::String jpcre2::select<char16_t>::toString(char16_t a);
-template jpcre2::select<char32_t>::String jpcre2::select<char32_t>::toString(char32_t a);
-#endif
 
-namespace jpcre2{
-template<>
-void select<char>::Sprintf(char * buf, int length, int x) {
-    snprintf(buf, length, "%d", x);
-}
-template<>
-void select<wchar_t>::Sprintf(wchar_t * buf, int length, int x) {
-    swprintf(buf, length + 1, L"%d", x);
-}
-/*
-template<>
-SIZE_T jpcre2::select<char>::Strlen(const char* a){
-    return strlen(a);
-}
-
-template<>
-SIZE_T jpcre2::select<wchar_t>::Strlen(const wchar_t* a){
-    return wcslen(a);
-}
-*/
-
-
-template<class Char_T>
-typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::toString(int x) {
+/// @param x Integer to be converted to jpcre2::String
+/// @return jpcre2::String
+jpcre2::String jpcre2::utils::toString(int x) {
 	int length = snprintf(0, 0, "%d", x);
 	assert(length >= 0);
 	Char* buf = new Char[length + 1];
-    Sprintf(buf, length +1, x);
+    #ifdef JPCRE2_USE_WSTRING
+        swprintf(buf, length + 1, L"%d", x);
+    #else
+        snprintf(buf, length + 1, "%d", x);
+    #endif
 	String str(buf);
 	delete[] buf;
 	return str;
 }
-//Explicit inst..
-template jpcre2::select<char>::String jpcre2::select<char>::toString(int x);
-template jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::toString(int x);
 
-#if __cplusplus >= 201103L
-template<>
-typename jpcre2::select<char16_t>::String jpcre2::select<char16_t>::toString(int x) {
-	std::string s = std::to_string(x);
-    std::u16string us = convert16.from_bytes(s);
-    return us;
-}
-template<>
-typename jpcre2::select<char32_t>::String jpcre2::select<char32_t>::toString(int x) {
-	std::string s = std::to_string(x);
-    std::u32string us = convert32.from_bytes(s);
-    return us;
-}
-#endif
-
-}
-
-
-template<class Char_T>
-typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::toString(PCRE2_UCHAR* a) {
+/// @param a PCRE2_UCHAR* to be converted to jpcre2::String
+/// @return jpcre2::String
+jpcre2::String jpcre2::utils::toString(PCRE2_UCHAR* a) {
 	if (a)
 		return String((Char*) a);
 	else
 		return JPCRE2_EMPTY_STRING;
 }
-//Explicit
-template jpcre2::select<char>::String jpcre2::select<char>::toString(PCRE2_UCHAR* a);
-template jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::toString(PCRE2_UCHAR* a);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::String jpcre2::select<char16_t>::toString(PCRE2_UCHAR* a);
-template jpcre2::select<char32_t>::String jpcre2::select<char32_t>::toString(PCRE2_UCHAR* a);
-#endif
 
-
-
-template<class Char_T>
-typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::getPcre2ErrorMessage(int err_num) {
+/// @param err_num PCRE2 error number
+/// @return Error message as jpcre2::String
+jpcre2::String jpcre2::utils::getPcre2ErrorMessage(int err_num) {
 	PCRE2_UCHAR buffer[8048];
 	pcre2_get_error_message(err_num, buffer, sizeof(buffer));
 	return toString((PCRE2_UCHAR*) buffer);
 }
-//Explicit inst...
-template jpcre2::select<char>::String jpcre2::select<char>::getPcre2ErrorMessage(int err_num);
-template jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::getPcre2ErrorMessage(int err_num);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::String jpcre2::select<char16_t>::getPcre2ErrorMessage(int err_num);
-template jpcre2::select<char32_t>::String jpcre2::select<char32_t>::getPcre2ErrorMessage(int err_num);
-#endif
 
 
-template<class Char_T>
-typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::getErrorMessage(int err_num, int err_off) {
+/**Return error message according to error number and error offset
+ * @param err_num Error number
+ * @param err_off Error offset
+ * @return Error message as a string
+ * */
+jpcre2::String jpcre2::utils::getErrorMessage(int err_num, int err_off) {
 	if (err_num == (int)ERROR::JIT_COMPILE_FAILED) {
-		return getPcre2ErrorMessage((int) err_off);
+		return JIT_ERROR_MESSAGE_PREFIX
+				+ getPcre2ErrorMessage((int) err_off);
 	} else if(err_num != 0) {
-		return getPcre2ErrorMessage((int) err_num) + toString((int) err_off);
+		return getPcre2ErrorMessage((int) err_num) + jpcre2::ERROR_OFFSET_SUFFIX
+				+ toString((int) err_off);
 	}
     else return JPCRE2_EMPTY_STRING;
 }
-//Explicit inst...
-template jpcre2::select<char>::String jpcre2::select<char>::getErrorMessage(int err_num, int err_off);
-template jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::getErrorMessage(int err_num, int err_off);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::String jpcre2::select<char16_t>::getErrorMessage(int err_num, int err_off);
-template jpcre2::select<char32_t>::String jpcre2::select<char32_t>::getErrorMessage(int err_num, int err_off);
-#endif
+
+jpcre2::String jpcre2::utils::getWarningMessage(int war_num, int war_off) {
+    if(war_num == (int)ERROR::INVALID_MODIFIER) return jpcre2::INVALID_MODIFIER_MSG + toString((Char)war_off);
+    else return JPCRE2_EMPTY_STRING;
+}
 
 
-template<class Char_T>
-std::string jpcre2::select<Char_T>::Regex::getModifier(){
+
+/**
+ *  Calculate modifier string from #compile_opts and #jpcre2_compile_opts and return it
+ *
+ *  Do remember that modifiers (or PCRE2 and JPCRE2 options) do not change or get initialized
+ *  as long as you don't do that explicitly. Calling Regex::setModifier() will re-set them.
+ *
+ *  **Mixed or combined modifier**.
+ *
+ *  Some modifier may include other modifiers i.e they have the same meaning of some modifiers
+ *  combined together. For example, the 'n' modifier includes the 'u' modifier and together they
+ *  are equivalent to `PCRE2_UTF | PCRE2_UCP`. When you set a modifier like this, both options
+ *  get set, and when you remove (`Regex::changeModifier())` the 'n', both will get removed
+ *  @return Calculated modifier string
+ * @see RegexMatch::getModifier()
+ * @see RegexReplace::getModifier()
+ * */
+jpcre2::String jpcre2::Regex::getModifier(){
     //Calculate PCRE2 mod
-    std::string temp("");
+    String temp(JPCRE2_EMPTY_STRING);
     for(SIZE_T i = 0; i < MOD::C_N.length(); ++i){
         if( (MOD::C_V[i] & compile_opts) != 0 && 
             (MOD::C_V[i] & compile_opts) == MOD::C_V[i]) //One option can include other
@@ -284,20 +239,14 @@ std::string jpcre2::select<Char_T>::Regex::getModifier(){
     }
     return temp;
 }
-//Explicit inst ...
-template std::string jpcre2::select<char>::Regex::getModifier();
-template std::string jpcre2::select<wchar_t>::Regex::getModifier();
-#if __cplusplus >= 201103L
-template std::string jpcre2::select<char16_t>::Regex::getModifier();
-template std::string jpcre2::select<char32_t>::Regex::getModifier();
-#endif
 
-
-
-template<class Char_T>
-std::string jpcre2::select<Char_T>::RegexMatch::getModifier(){
+///Calculate modifier string from #match_opts and #jpcre2_match_opts and return it.
+///@return Modifier string
+///@see Regex::getModifier()
+///@see RegexReplace::getModifier()
+jpcre2::String jpcre2::RegexMatch::getModifier(){
     //Calculate PCRE2 mod
-    std::string temp("");
+    String temp(JPCRE2_EMPTY_STRING);
     for(SIZE_T i = 0; i < MOD::M_N.length(); ++i){
         if( (MOD::M_V[i] & match_opts) != 0 && 
             (MOD::M_V[i] & match_opts) == MOD::M_V[i]) //One option can include other
@@ -311,19 +260,14 @@ std::string jpcre2::select<Char_T>::RegexMatch::getModifier(){
     }
     return temp;
 }
-//Explicit inst ...
-template std::string jpcre2::select<char>::RegexMatch::getModifier();
-template std::string jpcre2::select<wchar_t>::RegexMatch::getModifier();
-#if __cplusplus >= 201103L
-template std::string jpcre2::select<char16_t>::RegexMatch::getModifier();
-template std::string jpcre2::select<char32_t>::RegexMatch::getModifier();
-#endif
 
-
-template<class Char_T>
-std::string jpcre2::select<Char_T>::RegexReplace::getModifier(){
+///Calculate modifier string from #replace_opts and #jpcre2_replace_opts and return it.
+///@return Modifier string
+///@see Regex::getModifier()
+///@see RegexMatch::getModifier()
+jpcre2::String jpcre2::RegexReplace::getModifier(){
     //Calculate PCRE2 mod
-    std::string temp("");
+    String temp(JPCRE2_EMPTY_STRING);
     for(SIZE_T i = 0; i < MOD::R_N.length(); ++i){
         if( (MOD::R_V[i] & replace_opts) != 0 &&
             (MOD::R_V[i] & replace_opts) == MOD::R_V[i]) //One option can include other
@@ -337,13 +281,7 @@ std::string jpcre2::select<Char_T>::RegexReplace::getModifier(){
     }
     return temp;
 }
-//Explicit
-template std::string jpcre2::select<char>::RegexReplace::getModifier();
-template std::string jpcre2::select<wchar_t>::RegexReplace::getModifier();
-#if __cplusplus >= 201103L
-template std::string jpcre2::select<char16_t>::RegexReplace::getModifier();
-template std::string jpcre2::select<char32_t>::RegexReplace::getModifier();
-#endif
+
 
 /////////
 
@@ -351,9 +289,9 @@ template std::string jpcre2::select<char32_t>::RegexReplace::getModifier();
 
 
 
-
-template<class Char_T>
-void jpcre2::select<Char_T>::Regex::deepCopy(const Regex& r) {
+/// Copy compiled pattern to a new location, free the old memory and set the new pointer to #code
+/// @param r Regex&
+void jpcre2::Regex::deepCopy(const Regex& r) {
 	//Copy #code if it is non-null
 	if (r.code) {
         ///First release memory of #code from current object if it is non-NULL
@@ -383,17 +321,20 @@ void jpcre2::select<Char_T>::Regex::deepCopy(const Regex& r) {
 	rr = 0;
 	delete r.rr;
 }
-//Explicit
-template void jpcre2::select<char>::Regex::deepCopy(const Regex& r);
-template void jpcre2::select<wchar_t>::Regex::deepCopy(const Regex& r);
-#if __cplusplus >= 201103L
-template void jpcre2::select<char16_t>::Regex::deepCopy(const Regex& r);
-template void jpcre2::select<char32_t>::Regex::deepCopy(const Regex& r);
-#endif
 
 
-template<class Char_T>
-typename jpcre2::select<Char_T>::Regex& jpcre2::select<Char_T>::Regex::changeModifier(const std::string& mod, bool x) {
+/// After a call to this function #compile_opts and #jpcre2_compile_opts will be properly set.
+/// This function does not initialize or re-initialize options.
+/// If you want to set options from scratch, initialize them to 0 before calling this function.
+///
+/// **Note:** If speed of operation is very crucial, use Regex::changeJpcre2Option() and
+/// Regex::changePcre2Option() with equivalent options. It will be faster that way.
+/// @param mod Modifier string
+/// @param x Whether to add or remove option
+/// @return Reference to the regex object
+/// @see RegexMatch::changeModifier()
+/// @see RegexReplace::changeModifier()
+jpcre2::Regex& jpcre2::Regex::changeModifier(const String& mod, bool x) {
 	//loop through mod
 	for (SIZE_T i = 0; i < mod.length(); ++i) {
         //First check for JPCRE2 mods
@@ -410,27 +351,33 @@ typename jpcre2::select<Char_T>::Regex& jpcre2::select<Char_T>::Regex::changeMod
                 goto endfor;
             }
         }
-        
-        //Modifier didn't match, invalid modifier
-        #ifdef JPCRE2_ASSERT_INVALID_MODIFIER
-        assert(std::string("Invalid modifier") == std::string(1,mod[i]));
-        #endif
+        //Modifier didn't match, invalid modifier warning
+        warning_number = (int)ERROR::INVALID_MODIFIER;
+        warning_offset = (int)mod[i];
         
         endfor:;
 	}
     return *this;
 }
-//Explicit
-template jpcre2::select<char>::Regex& jpcre2::select<char>::Regex::changeModifier(const std::string& mod, bool x);
-template jpcre2::select<wchar_t>::Regex& jpcre2::select<wchar_t>::Regex::changeModifier(const std::string& mod, bool x);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::Regex& jpcre2::select<char16_t>::Regex::changeModifier(const std::string& mod, bool x);
-template jpcre2::select<char32_t>::Regex& jpcre2::select<char32_t>::Regex::changeModifier(const std::string& mod, bool x);
-#endif
 
 
-template<class Char_T>
-void jpcre2::select<Char_T>::Regex::compile() {
+/**
+ *
+ * Use options from class variables.
+ *
+ * Prefer using one of its variants when compiling pattern for an already declared Regex object.
+ * A use of
+ * ```cpp
+ * jpcre2::Regex re;
+ * re = jpcre2::Regex("pattern");
+ * ```
+ * (or such) is discouraged. see `Regex::operator=(const Regex& r)` for details.
+ * @see void compile(const String& re, Uint po, Uint jo)
+ * @see void compile(const String& re, Uint po)
+ * @see void compile(const String& re, const String& mod)
+ * @see void compile(const String& re)
+ * */
+void jpcre2::Regex::compile() {
 	//Get c_str of pattern
 	PCRE2_SPTR c_pattern = (PCRE2_SPTR) pat_str.c_str();
 
@@ -442,8 +389,8 @@ void jpcre2::select<Char_T>::Regex::compile() {
 	pcre2_compile_context *ccontext = pcre2_compile_context_create(0);
 
 	if (mylocale != LOCALE_NONE) {
-		std::string loc_old;
-		loc_old = std::setlocale(LC_CTYPE, mylocale.c_str());//mylocal needs to be std::string
+		String loc_old;
+		loc_old = utils::toString((Char*)std::setlocale(LC_CTYPE, (char*)mylocale.c_str()));
 		const unsigned char *tables = pcre2_maketables(0);
 		pcre2_set_character_tables(ccontext, tables);
 		std::setlocale(LC_CTYPE, (char*)loc_old.c_str());
@@ -471,14 +418,6 @@ void jpcre2::select<Char_T>::Regex::compile() {
 	}
     error_number = error_offset = 0;
 }
-//Explicit
-template void jpcre2::select<char>::Regex::compile();
-template void jpcre2::select<wchar_t>::Regex::compile();
-#if __cplusplus >= 201103L
-template void jpcre2::select<char16_t>::Regex::compile();
-template void jpcre2::select<char32_t>::Regex::compile();
-#endif
-
 
 //////////////////
 
@@ -487,23 +426,39 @@ template void jpcre2::select<char32_t>::Regex::compile();
 
 
 
-template<class Char_T>
-typename jpcre2::select<Char_T>::RegexReplace& jpcre2::select<Char_T>::RegexReplace::resetErrors() {
+///Reset errors to zero.
+///If you wanna examine the error status of a function call in the method chain,
+///add this function just before your target function so that the error is set to zero
+///before that target function is called, and leave everything out after the target
+///function so that there will be no additional errors from other functions.
+///
+///This function is callable from everywhere in a method chain,
+///i.e other copy of this function for other classes are available
+///and they do the exactly same thing.
+///@return A reference to the RegexReplace object
+///@see Regex::resetErrors()
+///@see RegexMatch::resetErrors()
+jpcre2::RegexReplace& jpcre2::RegexReplace::resetErrors() {
     re->error_number = 0;
     re->error_offset = 0;
+    re->warning_number = 0;
+    re->warning_offset = 0;
     return *this;
 }
-//Explicit
-template jpcre2::select<char>::RegexReplace& jpcre2::select<char>::RegexReplace::resetErrors();
-template jpcre2::select<wchar_t>::RegexReplace& jpcre2::select<wchar_t>::RegexReplace::resetErrors();
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::RegexReplace& jpcre2::select<char16_t>::RegexReplace::resetErrors();
-template jpcre2::select<char32_t>::RegexReplace& jpcre2::select<char32_t>::RegexReplace::resetErrors();
-#endif
 
 
-template<class Char_T>
-typename jpcre2::select<Char_T>::RegexReplace& jpcre2::select<Char_T>::RegexReplace::changeModifier(const std::string& mod, bool x) {
+/// After a call to this function #replace_opts and #jpcre2_replace_opts will be properly set.
+/// This function does not initialize or re-initialize options.
+/// If you want to set options from scratch, initialize them to their defaults before calling this function.
+///
+/// **Note:** If speed of operation is very crucial, use RegexReplace::changeJpcre2Option() and
+/// RegexReplace::changePcre2Option() with equivalent options. It will be faster that way.
+/// @param mod Modifier string
+/// @param x Whether to add or remove option
+/// @return RegexReplace&
+/// @see RegexMatch::changeModifier()
+/// @see Regex::changeModifier()
+jpcre2::RegexReplace& jpcre2::RegexReplace::changeModifier(const String& mod, bool x) {
 	//loop through mod
 	for (SIZE_T i = 0; i < mod.length(); ++i) {
         //First check for JPCRE2 mods
@@ -521,36 +476,29 @@ typename jpcre2::select<Char_T>::RegexReplace& jpcre2::select<Char_T>::RegexRepl
             }
         }
         
-        //Modifier didn't match, invalid modifier
-        ///If this macro is defined, invalid modifier will terminate the program immediately with a failed assertion
-        #ifdef JPCRE2_ASSERT_INVALID_MODIFIER
-        assert(std::string("Invalid modifier") == std::string(1,mod[i]));
-        #endif
+        //Add to warning message
+        re->warning_number = (int)ERROR::INVALID_MODIFIER;
+        re->warning_offset = (int)mod[i];
         
         endfor:;
 	}
     return *this;
 }
-//Explicit
-template jpcre2::select<char>::RegexReplace& jpcre2::select<char>::RegexReplace::changeModifier(const std::string& mod, bool x);
-template jpcre2::select<wchar_t>::RegexReplace& jpcre2::select<wchar_t>::RegexReplace::changeModifier(const std::string& mod, bool x);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::RegexReplace& jpcre2::select<char16_t>::RegexReplace::changeModifier(const std::string& mod, bool x);
-template jpcre2::select<char32_t>::RegexReplace& jpcre2::select<char32_t>::RegexReplace::changeModifier(const std::string& mod, bool x);
-#endif
 
 
-template<class Char_T>
-typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::RegexReplace::replace() {
+/** Perform regex replace by retrieving subject string, replacement string, modifier and other options from class variables.
+ * @return Replaced string
+ * */
+jpcre2::String jpcre2::RegexReplace::replace() {
 
-	// If code is null, return the subject string unmodified.
+	/// If code is null, return the subject string unmodified.
 	if (re->code == 0)
 		return r_subject;
 
 	PCRE2_SPTR subject = (PCRE2_SPTR) r_subject.c_str();
-	PCRE2_SIZE subject_length = r_subject.length() /* Strlen((Char *) subject) */;
+	PCRE2_SIZE subject_length = Strlen((Char *) subject);
 	PCRE2_SPTR replace = (PCRE2_SPTR) r_replw.c_str();
-	PCRE2_SIZE replace_length = r_replw.length() /* Strlen((Char *) replace) */;
+	PCRE2_SIZE replace_length = Strlen((Char *) replace);
 	PCRE2_SIZE outlengthptr = (PCRE2_SIZE) buffer_size;
 	int ret = 0;
 	bool retry = true;
@@ -592,18 +540,10 @@ typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::RegexReplace::re
 		//If everything's ok exit the loop
 		break;
 	}
-	String result = toString((Char*) output_buffer);
+	String result = utils::toString((Char*) output_buffer);
 	::free(output_buffer);
 	return result;
 }
-//Explicit
-template jpcre2::select<char>::String jpcre2::select<char>::RegexReplace::replace();
-template jpcre2::select<wchar_t>::String jpcre2::select<wchar_t>::RegexReplace::replace();
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::String jpcre2::select<char16_t>::RegexReplace::replace();
-template jpcre2::select<char32_t>::String jpcre2::select<char32_t>::RegexReplace::replace();
-#endif
-
 
 /////////////////
 
@@ -611,24 +551,38 @@ template jpcre2::select<char32_t>::String jpcre2::select<char32_t>::RegexReplace
 
 
 
-
-template<class Char_T>
-typename jpcre2::select<Char_T>::RegexMatch& jpcre2::select<Char_T>::RegexMatch::resetErrors() {
+///Reset errors to zero.
+///If you wanna examine the error status of a function call in the method chain,
+///add this function just before your target function so that the error is set to zero
+///before that target function is called, and leave everything out after the target
+///function so that there will be no additional errors from other functions.
+///
+///This function is callable from everywhere in a method chain.
+///i.e other copy of this function for other classes are available
+///and they do the exactly same thing.
+///@return A reference to the RegexMatch object
+///@see Regex::resetErrors()
+///@see RegexReplace::resetErrors()
+jpcre2::RegexMatch& jpcre2::RegexMatch::resetErrors() {
     re->error_number = 0;
     re->error_offset = 0;
+    re->warning_number = 0;
+    re->warning_offset = 0;
     return *this;
 }
-//Explicit
-template jpcre2::select<char>::RegexMatch& jpcre2::select<char>::RegexMatch::resetErrors();
-template jpcre2::select<wchar_t>::RegexMatch& jpcre2::select<wchar_t>::RegexMatch::resetErrors();
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::RegexMatch& jpcre2::select<char16_t>::RegexMatch::resetErrors();
-template jpcre2::select<char32_t>::RegexMatch& jpcre2::select<char32_t>::RegexMatch::resetErrors();
-#endif
 
-
-template<class Char_T>
-typename jpcre2::select<Char_T>::RegexMatch& jpcre2::select<Char_T>::RegexMatch::changeModifier(const std::string& mod, bool x) {
+/// After a call to this function #match_opts and #jpcre2_match_opts will be properly set.
+/// This function does not initialize or re-initialize options.
+/// If you want to set options from scratch, initialize them to their default values before calling this function.
+///
+/// **Note:** If speed of operation is very crucial, use RegexMatch::changeJpcre2Option() and
+/// RegexMatch::changePcre2Option() with equivalent options. It will be faster that way.
+/// @param mod Modifier string
+/// @param x Whether to add or remove options
+/// @return RegexMatch&
+/// @see RegexReplace::changeModifier()
+/// @see Regex::changeModifier()
+jpcre2::RegexMatch& jpcre2::RegexMatch::changeModifier(const String& mod, bool x) {
 	//loop through mod
 	for (SIZE_T i = 0; i < mod.length(); ++i) {
         //First check for JPCRE2 mods
@@ -646,26 +600,21 @@ typename jpcre2::select<Char_T>::RegexMatch& jpcre2::select<Char_T>::RegexMatch:
             }
         }
         
-        //Modifier didn't match, invalid modifier
-        #ifdef JPCRE2_ASSERT_INVALID_MODIFIER
-        assert(std::string("Invalid modifier") == std::string(1,mod[i]));
-        #endif
+        //Add to warning message
+        re->warning_number = (int)ERROR::INVALID_MODIFIER;
+        re->warning_offset = (int)mod[i];
         
         endfor:;
 	}
     return *this;
 }
-//Explicit
-template jpcre2::select<char>::RegexMatch& jpcre2::select<char>::RegexMatch::changeModifier(const std::string& mod, bool x);
-template jpcre2::select<wchar_t>::RegexMatch& jpcre2::select<wchar_t>::RegexMatch::changeModifier(const std::string& mod, bool x);
-#if __cplusplus >= 201103L
-template jpcre2::select<char16_t>::RegexMatch& jpcre2::select<char16_t>::RegexMatch::changeModifier(const std::string& mod, bool x);
-template jpcre2::select<char32_t>::RegexMatch& jpcre2::select<char32_t>::RegexMatch::changeModifier(const std::string& mod, bool x);
-#endif
 
 
-template<class Char_T>
-bool jpcre2::select<Char_T>::RegexMatch::getNumberedSubstrings(int rc, pcre2_match_data *match_data) {
+/// @param rc Return value from pcre2_match()
+/// @param match_data pcre2 match data
+/// @return Success or failure
+bool jpcre2::RegexMatch::getNumberedSubstrings(int rc,
+		pcre2_match_data *match_data) {
 	for (int i = 0; i < rc; i++) {
 		String value;
 		//If we use pcre2_substring_get_bynumber(),
@@ -685,7 +634,7 @@ bool jpcre2::select<Char_T>::RegexMatch::getNumberedSubstrings(int rc, pcre2_mat
 				break;   ///Errors other than PCRE2_ERROR_NOMEMORY error are ignored
 			}
 		}
-		value = toString((Char*) *bufferptr);
+		value = utils::toString((Char*) *bufferptr);
 		//pcre2_substring_free(*bufferptr);
 		::free(bufferptr);                  //must free memory
 		if (num_map0)
@@ -693,26 +642,27 @@ bool jpcre2::select<Char_T>::RegexMatch::getNumberedSubstrings(int rc, pcre2_mat
 	}
     return true;
 }
-//Explicit
-template bool jpcre2::select<char>::RegexMatch::getNumberedSubstrings(int rc, pcre2_match_data *match_data);
-template bool jpcre2::select<wchar_t>::RegexMatch::getNumberedSubstrings(int rc, pcre2_match_data *match_data);
-#if __cplusplus >= 201103L
-template bool jpcre2::select<char16_t>::RegexMatch::getNumberedSubstrings(int rc, pcre2_match_data *match_data);
-template bool jpcre2::select<char32_t>::RegexMatch::getNumberedSubstrings(int rc, pcre2_match_data *match_data);
-#endif
 
 
-template<class Char_T>
-bool jpcre2::select<Char_T>::RegexMatch::getNamedSubstrings(int namecount, int name_entry_size, PCRE2_SPTR tabptr, pcre2_match_data *match_data) {
+/// @param namecount Number of capture group name
+/// @param name_entry_size Size of each entry in the name table.
+/// @param tabptr Pointer to name table
+/// @param match_data PCRE2 match data
+/// @return Success or failure
+bool jpcre2::RegexMatch::getNamedSubstrings(int namecount, int name_entry_size,
+		PCRE2_SPTR tabptr, pcre2_match_data *match_data) {
 
 	for (int i = 0; i < namecount; i++) {
 		String key, value, value1;
+        
         #if PCRE2_CODE_UNIT_WIDTH == 8
             int n = (int)((tabptr[0] << 8) | tabptr[1]);
-            key = toString((Char*) (tabptr + 2));
+            key = utils::toString((Char*) (tabptr + 2));
         #elif PCRE2_CODE_UNIT_WIDTH == 16 || PCRE2_CODE_UNIT_WIDTH == 32
             int n = (int)tabptr[0];
-            key = toString((Char*) (tabptr + 1));
+            key = utils::toString((Char*) (tabptr + 1));
+        #else
+            #error "PCRE2_CODE_UNIT_WIDTH must be either 8 or 16 or 32"
         #endif
 		PCRE2_UCHAR **bufferptr;
 		PCRE2_SIZE bufflen;
@@ -731,7 +681,7 @@ bool jpcre2::select<Char_T>::RegexMatch::getNamedSubstrings(int namecount, int n
 				break;   ///Errors other than PCRE2_ERROR_NOMEMORY error are ignored
 			}
 		}
-		value = toString((Char *) *bufferptr);
+		value = utils::toString((Char *) *bufferptr);
 
 		//Let's get the value again, this time with number
 		//We will match this value with the previous one.
@@ -753,7 +703,7 @@ bool jpcre2::select<Char_T>::RegexMatch::getNamedSubstrings(int namecount, int n
 				break;   ///Errors other than PCRE2_ERROR_NOMEMORY error are ignored
 			}
 		}
-		value1 = toString((Char *) *bufferptr);
+		value1 = utils::toString((Char *) *bufferptr);
 
 		//pcre2_substring_free(*bufferptr);
 		//Instead use free() to free the memory
@@ -770,17 +720,18 @@ bool jpcre2::select<Char_T>::RegexMatch::getNamedSubstrings(int namecount, int n
 	}
     return true;
 }
-//Explicit
-template bool jpcre2::select<char>::RegexMatch::getNamedSubstrings(int namecount, int name_entry_size, PCRE2_SPTR tabptr, pcre2_match_data *match_data);
-template bool jpcre2::select<wchar_t>::RegexMatch::getNamedSubstrings(int namecount, int name_entry_size, PCRE2_SPTR tabptr, pcre2_match_data *match_data);
-#if __cplusplus >= 201103L
-template bool jpcre2::select<char16_t>::RegexMatch::getNamedSubstrings(int namecount, int name_entry_size, PCRE2_SPTR tabptr, pcre2_match_data *match_data);
-template bool jpcre2::select<char32_t>::RegexMatch::getNamedSubstrings(int namecount, int name_entry_size, PCRE2_SPTR tabptr, pcre2_match_data *match_data);
-#endif
 
-
- template<class Char_T>
-jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
+/** Clear the specified vectors (#vec_num, #vec_nas, #vec_ntn) and re-fill them with match results,
+ * then return the match count.
+ *
+ * The size of each vectors should be equal to the match count.
+ * The return value is guaranteed to give you the right match count.
+ *
+ * @return Number of matches found
+ * @see SIZE_T Regex::match(const String& s)
+ * @see SIZE_T Regex::match(const String& s, const String& mod)
+ * */
+jpcre2::SIZE_T jpcre2::RegexMatch::match() {
 
 	/// If Regex::code is null, return 0 as the match count
 	if (re->code == 0)
@@ -799,7 +750,7 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
 	PCRE2_SIZE *ovector;
 	SIZE_T subject_length;
 	pcre2_match_data *match_data;
-	subject_length = m_subject.length()/* Strlen((Char *) subject) */;
+	subject_length = Strlen((Char *) subject);
     
 
 	/// Clear all (passed) vectors and initialize associated maps
@@ -1034,8 +985,7 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
                     #elif PCRE2_CODE_UNIT_WIDTH == 16
                         if ((subject[ovector[1]] & 0xfc00) != 0xdc00)
                     #endif
-                    // This is a dummy loop for UTF-32 (no iteration)
-                            break;
+						break; /* For UTF-32 this becomes a dummy loop */
 					ovector[1] += 1;
 				}
 			}
@@ -1091,16 +1041,4 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
 	// Must not free pcre2_code* code. This function has no right to modify regex.
 	return count;
 }
-//Explicit
-template jpcre2::SIZE_T jpcre2::select<char>::RegexMatch::match();
-template jpcre2::SIZE_T jpcre2::select<wchar_t>::RegexMatch::match();
-#if __cplusplus >= 201103L
-template jpcre2::SIZE_T jpcre2::select<char16_t>::RegexMatch::match();
-template jpcre2::SIZE_T jpcre2::select<char32_t>::RegexMatch::match();
-#endif
 
-
-#undef JPCRE2_GLUE
-#undef JPCRE2_JOIN
-#undef JPCRE2_SUFFIX
-#undef select

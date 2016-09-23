@@ -5,18 +5,15 @@
  * */
 
 #include <iostream>
-#define PCRE2_CODE_UNIT_WIDTH 8
 #include "jpcre2.hpp"
-
-typedef jpcre2::select<char> jp;
 
 
 int main(){
-    jp::Regex re; 
+    jpcre2::Regex re; 
 
     //Compile the pattern
     re.setPattern("(?:(?<word>[?.#@:]+)|(?<word>\\w+))\\s*(?<digit>\\d+)")     //Set various parameters
-      .addModifier("Jin")                                                      //
+      .addModifier("&Jin")                                                     //modifier & == jpcre2::VALIDATE_MODIFIER
       .addPcre2Option(0)                                                       //...
       .compile();                                                              //Finally compile it.
           
@@ -30,7 +27,7 @@ int main(){
     re.initReplace()                                                    //Invoke the initReplace() function
       .setSubject(s)                                                    //Set various parameters
       .setReplaceWith("(replaced:$1)(replaced:$2)(replaced:${word})")   //...
-      .addModifier("xE")                                                //
+      .addModifier("~xE")                                               //modifier ~ == jpcre2::ERROR_ALL
       .addPcre2Option(0)                                                //...
       .replace();                                                       //Finally perform the replace operation.
     

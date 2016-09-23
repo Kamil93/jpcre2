@@ -5,10 +5,7 @@
  *  */
 
 #include <iostream>
-#define PCRE2_CODE_UNIT_WIDTH 8
 #include "jpcre2.hpp"
-
-typedef jpcre2::select<char> jp;
 
 
 int main(){
@@ -17,7 +14,7 @@ int main(){
     /*
      * The following uses a temporary Regex object.
      */
-    if(jp::Regex("(\\d)|(\\w)").match("I am the subject"))
+    if(jpcre2::Regex("(\\d)|(\\w)").match("I am the subject"))
         std::cout<<"\nmatched";
     else
         std::cout<<"\nno match";
@@ -29,7 +26,7 @@ int main(){
 
     //If you want to match all and get the match count, use the action modifier 'g':
     std::cout<<"\n"<<
-        jp::Regex("(\\d)|(\\w)","m").match("I am the subject","g");
+        jpcre2::Regex("(\\d)|(\\w)","m").match("I am the subject","g");
 
     /*
      * Modifiers passed to the Regex constructor or with compile() function are compile modifiers
@@ -50,23 +47,23 @@ int main(){
      *  2. named substring
      *
      * For the above two, we have two vectors respectively:
-     *  1. jp::VecNum (Corresponding map: jp::MapNum)
-     *  2. jp::VecNas (Corresponding map: jp::MapNas)
+     *  1. jpcre2::VecNum (Corresponding map: jpcre2::MapNum)
+     *  2. jpcre2::VecNas (Corresponding map: jpcre2::MapNas)
      *
      * Another additional vector is available to get the substring position/number
      * for a particular captured group by name. It's a vector of name to number maps
-     *  * jp::VecNtN (Corresponding map: jp:MapNtN)
+     *  * jpcre2::VecNtN (Corresponding map: jpcre2:MapNtN)
      */
 
     // ***** Get numbered substring ***** ///
-    jp::VecNum vec_num;
+    jpcre2::VecNum vec_num;
     count =
-    jp::Regex("(\\w+)\\s*(\\d+)","m")
-        .initMatch()
-        .setSubject("I am 23, I am digits 10")
-        .setModifier("g")
-        .setNumberedSubstringVector(&vec_num)
-        .match();
+    jpcre2::Regex("(\\w+)\\s*(\\d+)","m")
+            .initMatch()
+            .setSubject("I am 23, I am digits 10")
+            .setModifier("g")
+            .setNumberedSubstringVector(&vec_num)
+            .match();
     /*
     * count (the return value) is guaranteed to give you the correct number of matches,
     * while vec_num.size() may give you wrong result if any match result
@@ -78,7 +75,7 @@ int main(){
     //Now vec_num is populated with numbered substrings for each match
     //The size of vec_num is the total match count
     //vec_num[0] is the first match
-    //The type of vec_num[0] is jp::MapNum
+    //The type of vec_num[0] is jpcre2::MapNum
     std::cout<<"\nTotal match of first match: "<<vec_num[0][0];
     std::cout<<"\nCaptrued group 1 of first match: "<<vec_num[0][1];
     std::cout<<"\nCaptrued group 2 of first match: "<<vec_num[0][2];
@@ -86,7 +83,7 @@ int main(){
      //captured group 3 doesn't exist, it will give you empty string
     std::cout<<"\nCaptrued group 3 of first match: "<<vec_num[0][3];
 
-    //Using the [] operator with jp::MapNum will create new element if it doesn't exist
+    //Using the [] operator with jpcre2::MapNum will create new element if it doesn't exist
     // i.e vec_num[0][3] were created in the above example.
     //This should be ok, if existence of a particular substring is not important
 
@@ -107,22 +104,22 @@ int main(){
 
     // ***** Get named substring ***** //
 
-    jp::VecNas vec_nas;
-    jp::VecNtN vec_ntn; // We will get name to number map vector too
+    jpcre2::VecNas vec_nas;
+    jpcre2::VecNtN vec_ntn; // We will get name to number map vector too
     count =
-    jp::Regex("(?<word>\\w+)\\s*(?<digit>\\d+)","m")
-        .initMatch()
-        .setSubject("I am 23, I am digits 10")
-        .setModifier("g")
-        //.setNumberedSubstringVector(vec_num) // We don't need it in this example
-        .setNamedSubstringVector(&vec_nas)
-        .setNameToNumberMapVector(&vec_ntn) // Additional (name to number maps)
-        .match();
+    jpcre2::Regex("(?<word>\\w+)\\s*(?<digit>\\d+)","m")
+            .initMatch()
+            .setSubject("I am 23, I am digits 10")
+            .setModifier("g")
+            //.setNumberedSubstringVector(vec_num) // We don't need it in this example
+            .setNamedSubstringVector(&vec_nas)
+            .setNameToNumberMapVector(&vec_ntn) // Additional (name to number maps)
+            .match();
     std::cout<<"\nNumber of matches: "<<vec_nas.size()/* or count */;
     //Now vec_nas is populated with named substrings for each match
     //The size of vec_nas is the total match count
     //vec_nas[0] is the first match
-    //The type of vec_nas[0] is jp::MapNas
+    //The type of vec_nas[0] is jpcre2::MapNas
     std::cout<<"\nCaptured group (word) of first match: "<<vec_nas[0]["word"];
     std::cout<<"\nCaptured group (digit) of first match: "<<vec_nas[0]["digit"];
 
@@ -156,16 +153,16 @@ int main(){
 
     std::cout<<"\n"<<
     //replace first occurrence of a digit with @
-    jp::Regex("\\d").replace("I am the subject string 44", "@");
+    jpcre2::Regex("\\d").replace("I am the subject string 44", "@");
 
     std::cout<<"\n"<<
     //replace all occurrences of a digit with @
-    jp::Regex("\\d").replace("I am the subject string 44", "@", "g");
+    jpcre2::Regex("\\d").replace("I am the subject string 44", "@", "g");
 
     //swap two parts of a string
     std::cout<<"\n"<<
-    jp::Regex("^([^\t]+)\t([^\t]+)$")
-        .replace("I am the subject\tTo be swapped according to tab", "$2 $1");
+    jpcre2::Regex("^([^\t]+)\t([^\t]+)$")
+            .replace("I am the subject\tTo be swapped according to tab", "$2 $1");
 
 
     return 0;

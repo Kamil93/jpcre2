@@ -7,25 +7,25 @@
  * */
 
 #include <iostream>
-#define PCRE2_CODE_UNIT_WIDTH 8
 #include "jpcre2.hpp"
 
 
-typedef jpcre2::select<char> jp;
-
 int main(){
-    jp::VecNum vec_num0;   //Vector to store numbered substring Maps.
-    jp::VecNas vec_nas0;   //Vector to store named substring Maps.
-    jp::VecNtN vec_nn0;    //Vector to store Named substring to Number Maps.
+
+    jpcre2::VecNum vec_num0;   //Vector to store numbered substring Maps.
+    jpcre2::VecNas vec_nas0;   //Vector to store named substring Maps.
+    jpcre2::VecNtN vec_nn0;    //Vector to store Named substring to Number Maps.
     
-    jp::Regex re;
+    jpcre2::Regex re;          //It's not supposed to throw any exception.
     
     //Compile the pattern
     re.setPattern("(?:(?<word>[?.#@:]+)|(?<word>\\w+))\\s*(?<digit>\\d+)")  //set pattern
-      .setModifier("mi")                                                    //set modifier
-      .addJpcre2Option(jpcre2::JIT_COMPILE)                                 //perform JIT compile
-      .addPcre2Option(PCRE2_DUPNAMES)                                       //add pcre2 option
-      .compile();                                                           //Finally compile it.
+          .setModifier("mi")                                                //set modifier
+          .addJpcre2Option(jpcre2::JIT_COMPILE)                             //perform JIT compile
+          .addPcre2Option(PCRE2_DUPNAMES)                                                //add pcre2 option
+          .compile();                                                       //Finally compile it.
+    
+    std::cerr<<re.getErrorMessage();
     
     // JIT error is a harmless error, it just means that an optimization failed.
     
@@ -34,16 +34,17 @@ int main(){
     
     size_t count = 0;
     
-    count = re.initMatch()                                  //Invoke the initMatch() function
-              .addModifier("g")                             //set various parameters
-              .setSubject(subject)                          //...
-              .setNumberedSubstringVector(&vec_num0)        //...
-              .setNamedSubstringVector(&vec_nas0)           //...
-              .setNameToNumberMapVector(&vec_nn0)           //...
-              .addPcre2Option(0)                            //...
-              .match();                                     //Finally perform the match
+    count = re.initMatch()                                      //Invoke the initMatch() function
+                  .addModifier("gf")                           //set various parameters
+                  .setSubject(subject)                          //...
+                  .setNumberedSubstringVector(&vec_num0)        //...
+                  .setNamedSubstringVector(&vec_nas0)           //...
+                  .setNameToNumberMapVector(&vec_nn0)           //...
+                  .addPcre2Option(0)                            //...
+                  .match();                                     //Finally perform the match
     
     std::cerr<<"\n"<<re.getErrorMessage();
+    std::cerr<<"\n"<<re.getWarningMessage(); //Invalid modifier: f
     
     
     // re.reset(); // re-initialize re
@@ -69,7 +70,7 @@ int main(){
         //This vector contains maps with number as the key and the corresponding substring as the value
         std::cout<<"\n-------------------------------------------------------------------------";
         std::cout<< "\n--- Numbered Substrings (number: substring) for match "<<i+1<<" ---\n";
-        for(jp::MapNum::iterator ent=vec_num0[i].begin();ent!=vec_num0[i].end();++ent){
+        for(jpcre2::MapNum::iterator ent=vec_num0[i].begin();ent!=vec_num0[i].end();++ent){
             std::cout<<"\n\t"<<ent->first<<": "<<ent->second<<"\n";
         }
         
@@ -78,7 +79,7 @@ int main(){
         //This vector contains maps with name as the key and the corresponding substring as the value
         std::cout<<"\n-------------------------------------------------------------------------";
         std::cout<< "\n--- Named Substrings (name: substring) for match "<<i+1<<" ---\n";
-        for(jp::MapNas::iterator ent=vec_nas0[i].begin();ent!=vec_nas0[i].end();++ent){
+        for(jpcre2::MapNas::iterator ent=vec_nas0[i].begin();ent!=vec_nas0[i].end();++ent){
             std::cout<<"\n\t"<<ent->first<<": "<<ent->second<<"\n";
         }
         
@@ -88,7 +89,7 @@ int main(){
         //i.e the number (of substring) can be accessed with the name for named substring.
         std::cout<<"\n-------------------------------------------------------------------------";
         std::cout<< "\n--- Name to number mapping (name: number/position) for match "<<i+1<<" ---\n";
-        for(jp::MapNtN::iterator ent=vec_nn0[i].begin();ent!=vec_nn0[i].end();++ent){
+        for(jpcre2::MapNtN::iterator ent=vec_nn0[i].begin();ent!=vec_nn0[i].end();++ent){
             std::cout<<"\n\t"<<ent->first<<": "<<ent->second<<"\n";
         }
     }

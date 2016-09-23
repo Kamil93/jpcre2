@@ -7,10 +7,8 @@
 
 
 #include <iostream>
-#define PCRE2_CODE_UNIT_WIDTH 8
 #include "jpcre2.hpp"
 
-typedef jpcre2::select<char> jp;
 
 #define getLine(a) std::getline(std::cin,a,'\n')
 
@@ -23,7 +21,7 @@ int main(){
 
     std::cout<<"\nEnter compile modifiers (eijmnsuxADJSU): ";
     getLine(mod);
-    jp::Regex re;   
+    jpcre2::Regex re;   
 
     // Compile the pattern
     re.compile(pat,mod);

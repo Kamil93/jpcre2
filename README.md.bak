@@ -1,4 +1,7 @@
-JPCRE2                         {#mainpage}
+
+<a name="mainpage"></a>
+
+JPCRE2                         
 ======
 
 C++ wrapper for PCRE2 library
@@ -11,7 +14,9 @@ C++ wrapper for PCRE2 library
 This provides some C++ wrapper functions to perform regex operations such as regex match and regex replace.
 
 
-# Dependency {#dependency}
+<a name="dependency"></a>
+
+# Dependency 
 
 1. PCRE2 library (`version >=10.21`).
 
@@ -19,11 +24,15 @@ This provides some C++ wrapper functions to perform regex operations such as reg
 If the required PCRE2 version is not available in the official channel, you can download <a href="https://github.com/jpcre2/pcre2">my fork of the library</a>.
 
 
-# Install or Include {#install-or-include}
+<a name="install-or-include"></a>
+
+# Install or Include 
 
 The `jpcre2.hpp` header should be included in the source file that uses JPCRE2 functionalities.
 
-## Use with sources {#use-with-sources}
+<a name="use-with-sources"></a>
+
+## Use with sources 
 
 After including the header you can compile your source either by installing and linking with JPCRE2 library or providing the following sources to your compiler:
 
@@ -44,7 +53,9 @@ g++ mycpp.cpp ... -L/path/to/your/pcre2/library -lpcre2-8
 
 **Note that** it requires the PCRE2 library installed in your system. If it is not already installed and linked in your compiler, you will need to link it with appropriate path and options.
 
-## Use as a library {#install-as-a-library}
+<a name="install-as-a-library"></a>
+
+## Use as a library 
 
 To install it as a library in a Unix based system, run:
 
@@ -69,16 +80,22 @@ If you are in a non-Unix system (e.g Windows), build a library from the JPCRE2 s
 2. To use the `PCRE2 POSIX` compatible library, add the `-lpcre2-posix` along with the others.
 
 
-# How to code with JPCRE2 {#how-to-code-with-jpcre2}
+<a name="how-to-code-with-jpcre2"></a>
+
+# How to code with JPCRE2 
 
 Performing a match or replacement against regex pattern involves two steps: 
 
 1. Compiling the pattern
 2. Performing the match or replacement operation
 
-## Compile a regex pattern {#compile-a-regex-pattern}
+<a name="compile-a-regex-pattern"></a>
 
-### A jpcre2::Regex object {#a-regex-object}
+## Compile a regex pattern 
+
+<a name="a-regex-object"></a>
+
+### A jpcre2::Regex object 
 
 (You can use temporary object too, see [short examples](#short-examples)).
 
@@ -89,7 +106,9 @@ jpcre2::Regex re;
 ```
 Each object for each regex pattern.
 
-### Compile the regex {#compile-the-regex}
+<a name="compile-the-regex"></a>
+
+### Compile the regex 
 
 ```cpp
 re.setPattern("(?:(?<word>[?.#@:]+)|(?<word>\\w+))\\s*(?<digit>\\d+)")  //set pattern
@@ -107,7 +126,9 @@ jpcre2::Regex re4("pattern4", PCRE2_ANCHORED, jpcre2::JIT_COMPILE);
 
 Now you can perform match or replace against the pattern. Use the `match()` member function to perform regex match and the `replace()` member function to perform regex replace.
 
-### Check if regex compiled successfully {#check-regex}
+<a name="check-regex"></a>
+
+### Check if regex compiled successfully 
 
 You can check if the regex was compiled successfully or not, but **it's not required at all**. Any error will be handled automatically and you will always get the right answer, e.g a match against a non-compiled regex will give you 0 match and for replace you will be returned the exact subject string that you passed.
 
@@ -128,14 +149,18 @@ if(!!re) std::cout<<"Success";
 else std::cout<<"Failure";
 ```
 
-## Match {#match}
+<a name="match"></a>
+
+## Match 
 
 The `jpcre2::Regex::match(const String& s)` member function can take two arguments (subject & modifier) and returns the number of matches found against the compiled pattern.
 
 
 To get the match result (captured groups) however, you need to call the `jpcre2::RegexMatch::match()` function. Point be noted that, you can not call this function directly or create any object of the class `jpcre2::RegexMatch`. To call this function, first invoke the `jpcre2::Regex::initMatch()` (or `jpcre2::Regex::getMatchObject()`) function. It will give you a reference to a `jpcre2::RegexMatch` object. Now you can chain method calls of `jpcre2::RegexMatch::setNumberedSubstringVector(VecNum* vec_num)` and such functions from `jpcre2::RegexMatch` class to pass various parameters. After you are done passing all the parameter that you need, the `jpcre2::RegexMatch::match()` function should be called to perform the actual match and return the match count. The match results will be stored in vectors (vectors of maps) whose pointers were passed as parameters.
 
-### Check if a string matches a regex {#check-if-a-string-matches-a-regex}
+<a name="check-if-a-string-matches-a-regex"></a>
+
+### Check if a string matches a regex 
 
 ```cpp
 if(re.match("I am the subject")) std::cout<<"matched (case sensitive)";
@@ -145,13 +170,17 @@ if(re.match("I am the subject","i")) std::cout<<"matched (case insensitive)";
 else std::cout<<"Didn't match";
 ```
 
-### Get match count {#simple-match-count}
+<a name="simple-match-count"></a>
+
+### Get match count 
 
 ```cpp
 size_t count = jpcre2::Regex("(\\d)|(\\w)","i").match("I am the subject","g");
 ```
 
-### Get match result {#do-match}
+<a name="do-match"></a>
+
+### Get match result 
 
 To get the match results, you need to pass appropriate vector pointers. This is an example of how you can get the numbered substrings/captured groups from a match:
 
@@ -166,7 +195,9 @@ size_t count=re.initMatch()									//Initialize match object
 //vec_num will be populated with maps of numbered substrings.
 //count is the total number of matches found
 ```
-### Access a captured group {#access-a-capture-group}
+<a name="access-a-capture-group"></a>
+
+### Access a captured group 
 
 You can access a substring/captured group by specifying their index (position):
 
@@ -175,7 +206,9 @@ std::cout<<vec_num[0][0]; // group 0 in first match
 std::cout<<vec_num[0][1]; // group 1 in first match
 std::cout<<vec_num[1][0]; // group 0 in second match
 ```
-### Get named capture group {#get-named-capture-group}
+<a name="get-named-capture-group"></a>
+
+### Get named capture group 
 
 To get named substring and/or name to number mapping, pass pointer to the appropriate vectors with `jpcre2::RegexMatch::setNamedSubstringVector()` and/or `jpcre2::RegexMatch::setNameToNumberMapVector()` before doing the match.
 
@@ -194,14 +227,18 @@ re.initMatch()
 
 ```
 
-### Access a capture group by name {#access-substring-by-name}
+<a name="access-substring-by-name"></a>
+
+### Access a capture group by name 
 
 ```cpp
 std::cout<<vec_nas[0]["name"]; // captured group by name in first match
 std::cout<<vec_nas[1]["name"]; // captured group by name in second match
 ```
 
-### Get the position of a capture group name {#get-number-to-name}
+<a name="get-number-to-name"></a>
+
+### Get the position of a capture group name 
 
 If you need this information, you should have passed a `jpcre2::VecNtN` pointer to `jpcre2::RegexMatch::setNameToNumberMapVector()` function before doing the match ([see above](#get-named-capture-group)).
 
@@ -209,7 +246,9 @@ If you need this information, you should have passed a `jpcre2::VecNtN` pointer 
 std::cout<<vec_ntn[0]["name"]; // position of captured group 'name' in first match
 ```
 
-### Iterate through match result {#iterate}
+<a name="iterate"></a>
+
+### Iterate through match result 
 
 You can iterate through the matches and their substrings like this:
 
@@ -239,7 +278,9 @@ for(size_t i=0;i<vec_num.size();++i){
 
 *The process of iterating through the vectors and associated maps are the same for all three. The size of those vectors are the same and can be accessed in the same way.*
 
-### Re-use a match object {#re-use-a-match-object}
+<a name="re-use-a-match-object"></a>
+
+### Re-use a match object 
 
 Match object is a private property of `jpcre2::Regex` class. You either have to use `jpcre2::Regex::initMatch()` or `jpcre2::Regex::getMatchObject()` function to get a reference to it. The only difference between these two is: `initMatch()` always creates a new match object deleting the previous one, while `getMatchObject()` gives you a reference to the existing match object if available, otherwise creates it.
 
@@ -261,14 +302,18 @@ size_t count = re.getMatchObject()
 ```
 We can perform this kind of matches as many times as we want. The vectors always get re-initialized and thus contain new data.
 
-##Replace or Substitute {#replace}
+<a name="replace"></a>
+
+##Replace or Substitute 
 
 The `jpcre2::Regex::replace(const String& s, const String& r)` member function can take up-to three arguments (subject, replacement string, modifier) and returns the resultant replaced string.
 
 If you want to pass more options or prefer method chaining, you will have to use the `jpcre2::RegexReplace::replace()` function instead. Point be noted that, all constructors of the `jpcre2::RegexReplace` class are private and thus you can't create any object of this class or call the mentioned function directly. In this case you need to call `jpcre2::Regex::initReplace()` (or `jpcre2::Regex::getReplaceObject()`) function which will give you a reference to the replace object that you can use to chain method calls to pass various options to be used by `jpcre2::RegexReplace::replace()` before calling it.
 
 
-### Simple replacement {#simple-replace}
+<a name="simple-replace"></a>
+
+### Simple replacement 
 
 
 ```cpp
@@ -278,7 +323,9 @@ std::cout<<jpcre2::Regex("\\d+").replace("I am digits 1234","5678", "g");
 //1234 gets replaced with 5678
 ```
 
-### Using method chain {#using-method-chain}
+<a name="using-method-chain"></a>
+
+### Using method chain 
 
 ```cpp
 std::cout<<
@@ -297,7 +344,9 @@ re.initReplace()       //Prepare to call jpcre2::RegexReplace::replace()
 If you pass the size of the resultant string with `jpcre2::RegexReplace::setBufferSize()` function, make sure it will be enough to store the whole resultant replaced string; otherwise the internal replace function (`pcre2_substitute()`) will be called *twice* to adjust the size of the buffer to hold the whole resultant string in order to avoid `PCRE2_ERROR_NOMEMORY` error.
 
 
-# Modifiers {#modifiers}
+<a name="modifiers"></a>
+
+# Modifiers 
 
 **JPCRE2** uses modifiers to control various options, type, behavior of the regex and its' interactions with different functions that uses it. 
 
@@ -313,7 +362,9 @@ Types of modifiers:
   2. Combined or mixed modifier (e.g 'E')
 
 
-## Compile modifiers {#compile-modifier}
+<a name="compile-modifier"></a>
+
+## Compile modifiers 
 
 These modifiers define the behavior of a regex pattern (they are integrated in the compiled regex). They have more or less the same meaning as the [PHP regex modifiers](https://php.net/manual/en/reference.pcre.pattern.modifiers.php) except for `e, j and n` (marked with <sup>\*</sup>). 
 
@@ -333,7 +384,9 @@ Modifier | Details
 `S` | When a pattern is going to be used several times, it is worth spending more time analyzing it in order to speed up the time taken for matching/replacing. It may also be beneficial for a very long subject string or pattern. Equivalent to an extra compilation with JIT\_COMPILER with the option `PCRE2_JIT_COMPLETE`.
 `U` | This modifier inverts the "greediness" of the quantifiers so that they are not greedy by default, but become greedy if followed by `?`. Equivalent to `PCRE2_UNGREEDY` option.
 
-## Action modifiers {#action-modifiers}
+<a name="action-modifiers"></a>
+
+## Action modifiers 
 
 These modifiers are not compiled in the regex itself, rather they are used per call of each match, replace or compile function.
 
@@ -346,11 +399,15 @@ Modifier | Action | Details
 `x` | replace | Extended replacement operation. Equivalent to `PCRE2_SUBSTITUTE_EXTENDED`. It enables some Bash like features:<br>`${<n>:-<string>}`<br>`${<n>:+<string1>:<string2>}`<br>`<n>` may be a group number or a name. The first form specifies a default value. If group `<n>` is set, its value is inserted; if not, `<string>` is expanded and the result is inserted. The second form specifies strings that are expanded and inserted when group `<n>` is set or unset, respectively. The first form is just a convenient shorthand for `${<n>:+${<n>}:<string>}`.
 
 
-# Options {#options}
+<a name="options"></a>
+
+# Options 
 
 JPCRE2 allows both PCRE2 and native JPCRE2 options to be passed. PCRE2 options are recognized by the PCRE2 library itself.
 
-## JPCRE2 options {#jpcre-options}
+<a name="jpcre-options"></a>
+
+## JPCRE2 options 
 
 These options are meaningful only for the **JPCRE2** library, not the original **PCRE2** library. We use the `jpcre2::Regex::addJpcre2Option()` family of functions to pass these options.
 
@@ -360,11 +417,15 @@ Option | Details
 `jpcre2::FIND_ALL` | This option will do a global matching if passed during matching. The same can be achieved by passing the 'g' modifier with `jpcre2::RegexMatch::setModifier()` function.
 `jpcre2::JIT_COMPILE` | This is same as passing the `S` modifier during pattern compilation.
 
-## PCRE2 options {#pcre2-options}
+<a name="pcre2-options"></a>
+
+## PCRE2 options 
 
 While having its own way of doing things, JPCRE2 also supports the traditional PCRE2 options to be passed (and it's faster than passing modifier). We use the `jpcre2::Regex::addPcre2Option()` family of functions to pass the PCRE2 options. These options are the same as the PCRE2 library and have the same meaning. For example instead of passing the 'g' modifier to the replacement operation we can also pass its PCRE2 equivalent `PCRE2_SUBSTITUTE_GLOBAL` to have the same effect.
 
-# Error handling {#exception-handling}
+<a name="exception-handling"></a>
+
+# Error handling 
 
 When a known error is occurred during pattern compilation or match or replace, the error number and error offsets are set to corresponding variables of `jpcre2::Regex` class. You can get the error number, error offset and error message with `jpcre2::Regex::getErrorNumber()`, `jpcre2::Regex::getErrorOffset()` and `jpcre2::Regex::getErrorMessage()` functions respectively.
 
@@ -377,7 +438,9 @@ If you do experiment with various erroneous situations, make use of the `resetEr
 If you want to debug, you should also use `#define JPCRE2_ENABLE_DEBUG_MODE` before including `jpcre2.hpp`
 
 
-# Short examples {#short-examples}
+<a name="short-examples"></a>
+
+# Short examples 
 
 ```cpp
 size_t count;

@@ -9,7 +9,7 @@ Version 10.28.04 - Thu Nov 10 17:14:50 UTC 2016
 * used const char[] instead of const std::string.
 * removed LOCALE_NONE and LOCALE_DEFAULT constants.
 
-
+ 
 Version 10.28.03 - Mon Oct 31 22:24:29 UTC 2016
 -----------------------------------------------
 
